@@ -108,7 +108,7 @@ void dot() {
 }
 
 //makes led dash for 3 time units
-//makes a small flash between each time unit
+//flashes dark for bufferTime ms durring each time unit to indicate seperate time units
 void dash(){
   //Serial.print(3); //print for debugging
   for(int i = 0; i < 3; ++i) {
