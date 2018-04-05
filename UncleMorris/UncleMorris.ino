@@ -12,21 +12,19 @@ char morseCodeKey [36][7] = {"01 ","1000 ","1010 ","100 ","0 ","0010 ", // abcde
                           "10000 ","11000 ","11100 ","11110 ","11111 "};// 56789
 
 // Danny,
-// Do NOT indent with tabs. Ever. If you do it again, I will do something mean to you in return.
-// Also, make sure your code is readable. If it looks semantically different than what I have written 
-//  below, it is probably difficult to understand to most people. Please read Google's Style Guides
-//  for C++; your previous code made some pretty bad sins.
+
 // https://google.github.io/styleguide/cppguide.html
 
-// But thanks anyway for doing this. 
+// But thanks anyway for doing this. I love you.
 // - Josh
 
 int thermo = A0;
 int photo = A3;
 int thermoTarget = 1234;
 int photoTarget = 4321;
+int targetRange = 5;
 char message[] = "abcdefghijklmnopqrstuvwxyz0123456789"; // MUST BE lowercase alphanumeric
- //36 alphanumeric numbers, 0 for dot, 1 for dash letters then numbers
+ //36 alphanumeric numbers, 0 for dot, 1 for dash, letters then numbers
 int ledPin = 13;
 int unitTime = 1000;  //in ms
 int bufferTime = 50;  //in ms
@@ -52,24 +50,22 @@ void loop()
 }
 
 bool checkSensors() {
-  // NO. DO NOT DO THIS. Will only read true if the analog read is EXACTLY the designated target value.
   // Set a true result for a range of values instead.
-  return (analogRead(thermo) == thermoTarget) && (analogRead(photo) == photoTarget);
+  return (analogRead(thermo) > thermoTarget-targetRange) && (analogRead(photo) > photoTarget-targetRange) &&
+  (analogRead(thermo) < thermoTarget+targetRange) && (analogRead(photo) < photoTarget+targetRange);
 }
 
 void displayNextLetter() {
   int keyIndex;
   char morseChar = message[letterIndex];
-  Serial.print(morseChar);
+  //Serial.print(morseChar); //print for debugging
 
-  // WTF are these values???? Are they ASCII? I can't tell; you didn't even comment your code
-  // Compare your chars to other chars; e.g. morseChar == ' '; or morseChar < 'a';.
-  if (morseChar == 32) {
+  if (morseChar == ' ') {
     wordSpace();
-  } else if (morseChar < 58) {
-    keyIndex = morseChar - 48 + 26;
+  } else if (morseChar < '9') {
+    keyIndex = morseChar - '0' + 26;//offset for 26 letters first
   } else {
-    keyIndex = morseChar - 97;
+    keyIndex = morseChar - 'a';
   }
   
   for (int i = 0; i < 5 && morseChar != 32; ++i) {
@@ -90,29 +86,31 @@ void displayNextLetter() {
 
 // I get the feeling there is a cleaner way to code these functions...
 // Maybe have a delayStep() function and then have a counter for the 
-//  number of times delayStep() needs to be called for the current state?
-// int delayCount;
-// dot  -> delayCount = 1;
-// dash -> delayCount = 3;
-// charSpace -> delaycount = 1;
-// wordSpace -> delayCount = 3;
-// etc.
-// btw, there are standards for how long these delays are supposed to be. 
-void interSpace(){
-  delay(unitTime);
+// number of times delayStep() needs to be called for the current state?
+
+
+/*International Morse code is composed of five elements:
+
+short mark, dot or "dit" (▄): "dot duration" is one time unit long
+longer mark, dash or "dah" (▄▄▄): three time units long
+inter-element gap between the dots and dashes within a character: one dot duration or one unit long
+short gap (between letters): three time units long
+medium gap (between words): seven time units long*/
+
+
+//makes led dot for 1 time unit
+void dot() {
+  //Serial.print(1); //print for debugging
+  digitalWrite(ledPin, HIGH);
+  delay(unitTime - bufferTime);
+  digitalWrite(ledPin, LOW);
+  delay(bufferTime);
 }
 
-void letterSpace(){
-  delay(unitTime*3);
-}
-
-void wordSpace(){
-  delay(unitTime*4);
-}
-
+//makes led dash for 3 time units
+//makes a small flash between each time unit
 void dash(){
-  // What is this print() supposed to do
-  Serial.print(3);
+  //Serial.print(3); //print for debugging
   for(int i = 0; i < 3; ++i) {
     digitalWrite(ledPin, HIGH);
     delay(unitTime - bufferTime);
@@ -121,11 +119,27 @@ void dash(){
   }
 }
 
-void dot() {
-  Serial.print(1);
-  digitalWrite(ledPin, HIGH);
-  delay(unitTime - bufferTime);
-  digitalWrite(ledPin, LOW);
-  delay(bufferTime);
+//the space between each dot/dash in a letter
+//lasts one time unit
+void interSpace(){
+  delay(unitTime);
 }
+
+//the space between each letter
+//lasts 3 time units
+void letterSpace(){
+  delay(unitTime*3);
+}
+
+
+//the space between each word 
+//sums to 7 time units when added to the letter space in program
+void wordSpace(){
+  delay(unitTime*4);
+}
+
+
+
+
+
 
