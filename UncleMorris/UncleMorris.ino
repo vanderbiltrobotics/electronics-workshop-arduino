@@ -25,19 +25,19 @@ char morseCodeKey [36][7] = {"01 ", "1000 ", "1010 ", "100 ", "0 ", "0010 ", // 
                              "10000 ", "11000 ", "11100 ", "11110 ", "11111 "
                             };// 56789
 
-int thermo = A0;
-int photo = A3;
+//int thermo = A0;
+//int photo = A3;
 
 //  messages MUST BE lowercase alphanumeric, these are the task
-char message[6][30] = {"task1 do this", "task2", "task3",
-                       "task4", "task5", "you did it"
+char message[6][30] = {"255", "31", "250",
+                       "32 and 8", "300 and 100", "you did it"
                       };
 
 
 int task = 0; //which task are we on
 
 int ledPin = 13;
-int unitTime = 1000;  //in ms
+int unitTime = 333;  //in ms
 int bufferTime = 50;  //in ms
 size_t letterCount = sizeof(message[task]); //amount of letters in current message
 int letterIndex = 0; // index  of current letter in message
@@ -106,51 +106,101 @@ void loop()
 void checkSensors() {
 
   //initialize case variables outside of case
-  int avail;
-  int thermoTarget;
-  int incomingByte;
-  int photoTarget;
-  int targetRange;
-
+  //int avail;
+  //int thermoTarget;
+  //int incomingByte;
+  //int photoTarget;
+  //int targetRange;
+  int readOutput1; // Output of circuit designed by student, read on pin A5
+  int readOutput2; // Output of circuit designed by student, read on pin A4
+  int answer1; // Value between 0 and 1024. Task is passed if readOutput1 == answer1
+  int answer2; // Value between 0 and 1024. Task is passed if readOutput1 == answer1 && readOutput2 == answer2
+  int outPin1 = A5;
+  int outPin2 = A4;
+  bool printOutput = false; //If = TRUE, print values of readOutput1 and readOutput2
   //Serial.print("task = ");
   //Serial.print(task);
 
+  //Students try to get readOutput = answer. Output1 read on A5, Output2 read on A4
   switch ( task ) {
 
-    case 0:// change this if you need to
-      avail = Serial.available();
-      //Serial.print("avail = ");
-      //Serial.println(avail);
-      if (avail > 0) {
-        // read the incoming byte:
-        incomingByte = Serial.read();
-
-        // say what you got:
-        Serial.print("I received: ");
-        Serial.println(incomingByte, DEC);
-        task++;
-      }
-      break;
-
-
-    case 1:
-      thermoTarget = 1234;
-      targetRange = 5;
-      if ((analogRead(thermo) > thermoTarget - targetRange) && (analogRead(thermo) < thermoTarget + targetRange)) {
+    //task+=4;
+    case 0: //BASIC VOLTAGE DIVISION
+      answer1 = 255; // Vmax/4. Only worked when answer1 = 162 for some reason.
+      readOutput1 = analogRead(outPin1);
+      if (printOutput)
+        Serial.println(readOutput1);
+      if ((readOutput1 > answer1 - 2) && (readOutput1 < answer1 + 2)) {
+        Serial.print("Task 1 passed! :D");
         task++;
         letterIndex = 0;
         letterCount = sizeof(message[task]);
       }
       break;
 
-    case 2:
-      photoTarget = 1234;
-      targetRange = 5;
-      if ((analogRead(photo) > photoTarget + targetRange) && (analogRead(photo) < photoTarget + targetRange)) {
+
+    case 1: //THERMISTOR TASK
+      answer1 = 31;
+      readOutput1 = analogRead(outPin1);
+      if (printOutput)
+        Serial.println(readOutput1);
+      if (readOutput1 == answer1) {
+        Serial.print("Task 2 passed! XD");
         task++;
         letterIndex = 0;
-        break;
+        letterCount = sizeof(message[task]);
       }
+      break;
+
+    case 2: //PHOTORESISTOR TASK - Use green light of arduino or make LED circuit
+      answer1 = 250;
+      readOutput1 = analogRead(outPin1);
+      if (printOutput)
+        Serial.println(readOutput1);
+      if ((readOutput1 > answer1 - 5) && (readOutput1 < answer1 +5)) {
+        Serial.print("Task 3 passed! Nice!!");
+        task++;
+        letterIndex = 0;
+      }
+      break;
+
+    case 3: //VOLTAGE DIVISION + THERMISTOR
+      answer1 = 32; //Obtain this voltage with thermistor probably
+      answer2 = 8;
+      readOutput1 = analogRead(outPin1);
+      readOutput2 - analogRead(outPin2);
+      if (printOutput){
+      Serial.print("A5 = ");
+      Serial.print(readOutput1);
+      Serial.print(", A4 = ");
+      Serial.println(readOutput2);
+      }
+      if (readOutput1 == answer1 && readOutput2 == answer2) {
+        Serial.print("Task 4 passed! YOU'RE AWESOME!!!");
+        task++;
+        letterIndex = 0;
+        letterCount = sizeof(message[task]);
+      }
+      break;
+
+    case 4: //VOLTAGE DIVISION + PHOTORESISTOR
+      answer1 = 300;
+      answer2 = 100;
+      readOutput1 = analogRead(outPin1);
+      readOutput2 = analogRead(outPin2);
+      if (printOutput){
+      Serial.print("A5 = ");
+      Serial.print(readOutput1);
+      Serial.print(", A4 = ");
+      Serial.println(readOutput2);
+      }
+      if ((readOutput1 > answer1 - 5) && (readOutput1 < answer1 + 5) &&
+          (readOutput2 > answer2 - 5) && (readOutput2 > answer2 + 5) ) {
+        Serial.print("Task 5 passed! YOU'RE THE GREATEST!!!!");
+        task++;
+        letterIndex = 0;
+      }
+      break;
   }
 }
 
